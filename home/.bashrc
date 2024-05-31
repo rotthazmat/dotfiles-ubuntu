@@ -137,3 +137,22 @@ node_version_for_ps1() {
 PS1='\n  \[\e[38;5;75m\]\w\[\e[0m\]'
 PS1=$PS1$(git_branch_for_ps1)
 PS1=$PS1'\n\[\e[38;5;221m\]\$\[\e[0m\] '
+
+# fnm
+export PATH="/home/jose/.local/share/fnm:$PATH"
+eval "`fnm env`"
+. "$HOME/.cargo/env"
+
+PATH=~/.console-ninja/.bin:$PATH
+# pnpm
+export PNPM_HOME="/home/jose/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH=$BUN_INSTALL/bin:$PATH
+export PATH="/usr/local/bin:$PATH"
