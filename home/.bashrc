@@ -156,3 +156,12 @@ esac
 export BUN_INSTALL="$HOME/.bun"
 export PATH=$BUN_INSTALL/bin:$PATH
 export PATH="/usr/local/bin:$PATH"
+
+export JAVA_HOME=/opt/jdk-21.0.4
+export PATH=$PATH:$JAVA_HOME/bin
+
+export GRADLE_HOME=/opt/gradle-8.11.1
+export PATH=$PATH:$GRADLE_HOME/bin
+
+export MAVEN_HOME=/opt/apache-maven-3.9.9
+export PATH=$PATH:$MAVEN_HOME/bin
