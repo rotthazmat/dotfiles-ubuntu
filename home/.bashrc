@@ -120,23 +120,25 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-git_branch_for_ps1() {
-  local branch='$(git branch 2>/dev/null | grep '"'"'*'"'"' | colrm 1 2)'
-  if [ '$branch' ]; then
-    echo " \[\e[38;5;245m\]> \[\e[38;5;177m\]$branch\[\e[0m\]"
-  fi
-}
+# ps1 implementations
+if [[ -f ~/.bash-custom-data/functions.sh ]]; then
+  . ~/.bash-custom-data/functions.sh
 
-node_version_for_ps1() {
-  local version='$(node --version)'
-  if [ -d "$PWD"/package.json ]; then
-    echo " \[\e[38;5;203m\]$version\[\e[0m\]"
-  fi
-}
+  build_prompt() {
+    PS1='\n  \[\e[38;5;75m\]\w\[\e[0m\]'
+    # PS1+="$(user_name_ps1)"
+    # PS1+="$(computer_name_ps1)"
+    PS1+="$(node_ps1)"
+    PS1+="$(php_ps1)"
+    PS1+="$(python_ps1)"
+    PS1+="$(mc_spigot_ps1)"
+    PS1+="$(git_ps1)"
+    PS1+='\n\[\e[38;5;221m\]\$\[\e[0m\] '
+  }
 
-PS1='\n  \[\e[38;5;75m\]\w\[\e[0m\]'
-PS1=$PS1$(git_branch_for_ps1)
-PS1=$PS1'\n\[\e[38;5;221m\]\$\[\e[0m\] '
+  PROMPT_COMMAND="build_prompt"
+fi
+# ps1 implementations end
 
 # fnm
 export PATH="/home/jose/.local/share/fnm:$PATH"
