@@ -1,85 +1,82 @@
-# Initialize cache arrays
-declare -gA __VERSION_CACHE
-
-# Set required files
+# =================== REQUIRED FILES DEFINITIONS ===================
 CACHE_FILE="$HOME/.bash-custom-data/cache"
 CACHE_LOCK="$HOME/.bash-custom-data/cache.lock"
 
 # =================== CACHE FUNCTIONS ===================
 init_cache() {
-    [[ -f "$CACHE_FILE" ]] || touch "$CACHE_FILE"
-    chmod 600 "$CACHE_FILE"  # Secure permissions
+  [[ -f "$CACHE_FILE" ]] || touch "$CACHE_FILE"
+  chmod 600 "$CACHE_FILE"  # Secure permissions
 }
 
 get_cached_parent_version() {
-    local tech="$1"
-    local current_path="${PWD%/}"
-    local cache_file="${CACHE_FILE:-"$HOME/.bash-custom-data/cache"}"
-    
-    (
-        flock -s 200 || return 1
-        
-        # Use faster input splitting
-        while IFS='=' read -r key value; do
-            # Skip malformed lines
-            [[ -z "$key" ]] && continue
-            
-            # Faster prefix check than [[ == ]]
-            if [[ "$key" =~ ^"$tech|"(.*) ]]; then
-                local cached_path="${BASH_REMATCH[1]}"
-                
-                # Exact match case
-                if [[ "$current_path" == "$cached_path" ]]; then
-                    printf '%s' "$value"
-                    exit 0
-                fi
-                
-                # Parent directory match
-                if [[ "$current_path" == "$cached_path"/* ]]; then
-                    printf '%s' "$value"
-                    exit 0
-                fi
-            fi
-        done < "$cache_file"
-        
-        exit 1
-    ) 200<"${CACHE_LOCK:-"$HOME/.bash-custom-data/cache.lock"}"
-    
-    return $?
+  local tech="$1"
+  local current_path="${PWD%/}"
+  local cache_file="${CACHE_FILE:-"$HOME/.bash-custom-data/cache"}"
+
+  (
+    flock -s 200 || return 1
+
+    # Use faster input splitting
+    while IFS='=' read -r key value; do
+      # Skip malformed lines
+      [[ -z "$key" ]] && continue
+
+      # Faster prefix check than [[ == ]]
+      if [[ "$key" =~ ^"$tech|"(.*) ]]; then
+        local cached_path="${BASH_REMATCH[1]}"
+
+        # Exact match case
+        if [[ "$current_path" == "$cached_path" ]]; then
+          printf '%s' "$value"
+          exit 0
+        fi
+
+        # Parent directory match
+        if [[ "$current_path" == "$cached_path"/* ]]; then
+          printf '%s' "$value"
+          exit 0
+        fi
+      fi
+    done < "$cache_file"
+
+    exit 1
+  ) 200<"${CACHE_LOCK:-"$HOME/.bash-custom-data/cache.lock"}"
+
+  return $?
 }
 
 get_cached() {
-    local key="$1"
-    (
-        flock -s 200 || return 1
-        [[ -f "$CACHE_FILE" ]] || return 1
-        grep -m1 -F -- "$key=" "$CACHE_FILE" 2>/dev/null | cut -d= -f2-
-    ) 200<"$CACHE_LOCK"
+  local key="$1"
+  (
+    flock -s 200 || return 1
+    [[ -f "$CACHE_FILE" ]] || return 1
+    grep -m1 -F -- "$key=" "$CACHE_FILE" 2>/dev/null | cut -d= -f2-
+  ) 200<"$CACHE_LOCK"
 }
 
 set_cached() {
-    local key="$1" value="$2"
-    (
-        flock -x 200 || return 1
-        init_cache  # Ensure file exists within lock
-        
-        # Using temp file for atomic write
-        tempfile=$(mktemp)
-        awk -v key="$key" -v value="$value" '
-            BEGIN { FS=OFS="="; found=0 }
-            $1 == key { print key "=" value; found=1; next }
-            { print }
-            END { if (!found) print key "=" value }
-        ' "$CACHE_FILE" > "$tempfile" && \
-        mv "$tempfile" "$CACHE_FILE"
-    ) 200>"$CACHE_LOCK"
+  local key="$1" value="$2"
+  (
+    flock -x 200 || return 1
+    init_cache  # Ensure file exists within lock
+
+    # Using temp file for atomic write
+    tempfile=$(mktemp)
+    awk -v key="$key" -v value="$value" '
+      BEGIN { FS=OFS="="; found=0 }
+      $1 == key { print key "=" value; found=1; next }
+      { print }
+      END { if (!found) print key "=" value }
+    ' "$CACHE_FILE" > "$tempfile" && \
+    mv "$tempfile" "$CACHE_FILE"
+  ) 200>"$CACHE_LOCK"
 }
 
 reset_version_cache() {
-    (
-        flock -x 200 || return 1
-        [[ -f "$CACHE_FILE" ]] && > "$CACHE_FILE"
-    ) 200>"$CACHE_LOCK"
+  (
+    flock -x 200 || return 1
+    [[ -f "$CACHE_FILE" ]] && > "$CACHE_FILE"
+  ) 200>"$CACHE_LOCK"
 }
 
 # =================== VERSION MANAGEMENT FUNCTIONS ===================
