@@ -88,7 +88,7 @@ get_tech_version() {
 
 print_version() {
   local version="$1" icon="$2" color="$3"
-  [[ -n "$version" ]] || return
+  [[ -n "${version// /}" ]] || return
   printf ' \[\e[38;5;245m\]| \[\e[38;5;%dm\]%s %s\[\e[0m\]' "$color" "$icon" "$version"
 }
 
@@ -126,6 +126,14 @@ python_version() {
   }
 }
 
+python_environment() {
+  if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo "venv:$(basename "$VIRTUAL_ENV")"
+  elif [[ -n "$CONDA_DEFAULT_ENV" && "$CONDA_DEFAULT_ENV" != "base" ]]; then
+    echo "conda:$(basename "$CONDA_DEFAULT_ENV")"
+  fi
+}
+
 mc_spigot_version() {
   get_tech_version "mc_spigot" || {
     [[ -f "version_history.json" ]] || return
@@ -144,6 +152,12 @@ user_name_ps1()     { local v; v=$(user_name_value)     && print_version "$v" "�
 computer_name_ps1() { local v; v=$(computer_name_value) && print_version "$v" "💻" 180; }
 node_ps1()          { local v; v=$(node_version)        && print_version "$v" "⬢" 120; }
 php_ps1()           { local v; v=$(php_version)         && print_version "$v" "🐘" 183; }
-python_ps1()        { local v; v=$(python_version)      && print_version "$v" "🐍" 159; }
+python_ps1()        {
+  local v env
+  v=$(python_version 2>/dev/null) || return  # Handle errors too
+  [[ -z "$v" ]] && return  # Handle empty strings
+  env=$(python_environment 2>/dev/null)
+  print_version "${v}${env:+ ($env)}" "🐍" 159  # Optional space separator
+}
 mc_spigot_ps1()     { local v; v=$(mc_spigot_version)   && print_version "$v" "⛏ " 183; }
 git_ps1()           { local v; v=$(git_version)         && print_version "$v" "↳" 177; }
