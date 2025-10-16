@@ -1,0 +1,28 @@
+# ps1 implementations
+if [[ -f ~/.bash-custom-data/functions.sh ]]; then
+  . ~/.bash-custom-data/functions.sh
+
+  build_prompt() {
+    PS1='\n  \[\e[38;5;75m\]\w\[\e[0m\]'
+    # PS1+="$(user_name_ps1)"
+    # PS1+="$(computer_name_ps1)"
+    PS1+="$(node_ps1)"
+    PS1+="$(php_ps1)"
+    PS1+="$(python_ps1)"
+    PS1+="$(mc_spigot_ps1)"
+    PS1+="$(git_ps1)"
+    PS1+='\n\[\e[38;5;221m\]\$\[\e[0m\] '
+  }
+
+  PROMPT_COMMAND="build_prompt"
+fi
+# ps1 implementations end
+
+export JAVA_HOME=/opt/jdk-21.0.4
+export PATH=$PATH:$JAVA_HOME/bin
+
+export GRADLE_HOME=/opt/gradle-8.11.1
+export PATH=$PATH:$GRADLE_HOME/bin
+
+export MAVEN_HOME=/opt/apache-maven-3.9.9
+export PATH=$PATH:$MAVEN_HOME/bin
