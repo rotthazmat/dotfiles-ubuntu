@@ -128,6 +128,7 @@ if [[ -f ~/.bash-custom-data/functions.sh ]]; then
     PS1='\n  \[\e[38;5;75m\]\w\[\e[0m\]'
     # PS1+="$(user_name_ps1)"
     # PS1+="$(computer_name_ps1)"
+    # PS1+="$(battery_ps1)"
     PS1+="$(node_ps1)"
     PS1+="$(php_ps1)"
     PS1+="$(python_ps1)"

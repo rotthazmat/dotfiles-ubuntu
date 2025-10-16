@@ -101,6 +101,11 @@ computer_name_value() {
   echo "$HOSTNAME"
 }
 
+battery_value() {
+  local percentage=$(upower -i /org/freedesktop/UPower/devices/battery_BAT1 2>/dev/null | grep percentage | awk '{print $2}')
+  echo "${percentage:-N/A}"
+}
+
 node_version() {
   get_tech_version "node" || {
     [[ -f "$PWD/package.json" ]] || return
@@ -150,6 +155,7 @@ git_version() {
 # =================== PRINT FUNCTIONS ===================
 user_name_ps1()     { local v; v=$(user_name_value)     && print_version "$v" "👤" 250; }
 computer_name_ps1() { local v; v=$(computer_name_value) && print_version "$v" "💻" 180; }
+battery_ps1()       { local v; v=$(battery_value)       && print_version "$v" "⚡" 226; }
 node_ps1()          { local v; v=$(node_version)        && print_version "$v" "⬢" 120; }
 php_ps1()           { local v; v=$(php_version)         && print_version "$v" "🐘" 183; }
 python_ps1()        {
