@@ -1,0 +1,28 @@
+# ps1 implementations
+if [[ -f ~/.zsh-custom-data/functions.sh ]]; then
+  . ~/.zsh-custom-data/functions.sh
+
+  build_prompt() {
+    PROMPT=$'\n  %F{75}%~%f'
+    # PROMPT+="$(user_name_ps1)"
+    # PROMPT+="$(computer_name_ps1)"
+    PROMPT+="$(node_ps1)"
+    PROMPT+="$(php_ps1)"
+    PROMPT+="$(python_ps1)"
+    PROMPT+="$(mc_spigot_ps1)"
+    PROMPT+="$(git_ps1)"
+    PROMPT+=$'\n%F{221}$%f '
+  }
+
+  precmd() { build_prompt }
+fi
+# ps1 implementations end
+
+export JAVA_HOME=/opt/jdk-21.0.4
+export PATH=$PATH:$JAVA_HOME/bin
+
+export GRADLE_HOME=/opt/gradle-8.11.1
+export PATH=$PATH:$GRADLE_HOME/bin
+
+export MAVEN_HOME=/opt/apache-maven-3.9.9
+export PATH=$PATH:$MAVEN_HOME/bin
