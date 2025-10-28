@@ -2,10 +2,43 @@
 CACHE_FILE="$HOME/.zsh-custom-data/cache"
 CACHE_LOCK="$HOME/.zsh-custom-data/cache.lock"
 
+# Load zsh/system module for zsystem flock
+zmodload zsh/system 2>/dev/null
+
 # =================== CACHE FUNCTIONS ===================
 init_cache() {
   [[ -f "$CACHE_FILE" ]] || touch "$CACHE_FILE"
   chmod 600 "$CACHE_FILE"  # Secure permissions
+}
+
+# Acquire lock using mkdir (atomic on all Unix systems)
+acquire_lock() {
+  local lock_dir="${CACHE_LOCK}.d"
+  local max_wait=50  # 5 seconds max wait (50 * 0.1s)
+  local count=0
+
+  while ! mkdir "$lock_dir" 2>/dev/null; do
+    ((count++))
+    if ((count >= max_wait)); then
+      # Stale lock check: if older than 10 seconds, remove it
+      if [[ -d "$lock_dir" ]]; then
+        local lock_age=$(($(date +%s) - $(stat -f %m "$lock_dir" 2>/dev/null || echo 0)))
+        if ((lock_age > 10)); then
+          rmdir "$lock_dir" 2>/dev/null
+          continue
+        fi
+      fi
+      return 1
+    fi
+    sleep 0.1
+  done
+  return 0
+}
+
+# Release lock
+release_lock() {
+  local lock_dir="${CACHE_LOCK}.d"
+  rmdir "$lock_dir" 2>/dev/null
 }
 
 get_cached_parent_version() {
@@ -13,70 +46,64 @@ get_cached_parent_version() {
   local current_path="${PWD%/}"
   local cache_file="${CACHE_FILE:-"$HOME/.zsh-custom-data/cache"}"
 
-  (
-    flock -s 200 || return 1
+  [[ -f "$cache_file" ]] || return 1
 
-    # Use faster input splitting
-    while IFS='=' read -r key value; do
-      # Skip malformed lines
-      [[ -z "$key" ]] && continue
+  # Use faster input splitting
+  while IFS='=' read -r key value; do
+    # Skip malformed lines
+    [[ -z "$key" ]] && continue
 
-      # Faster prefix check than [[ == ]]
-      if [[ "$key" =~ ^"$tech|"(.*) ]]; then
-        local cached_path="${match[1]}"
+    # Faster prefix check than [[ == ]]
+    if [[ "$key" == "$tech|"* ]]; then
+      local cached_path="${key#$tech|}"
 
-        # Exact match case
-        if [[ "$current_path" == "$cached_path" ]]; then
-          printf '%s' "$value"
-          exit 0
-        fi
-
-        # Parent directory match
-        if [[ "$current_path" == "$cached_path"/* ]]; then
-          printf '%s' "$value"
-          exit 0
-        fi
+      # Exact match case
+      if [[ "$current_path" == "$cached_path" ]]; then
+        printf '%s' "$value"
+        return 0
       fi
-    done < "$cache_file"
 
-    exit 1
-  ) 200<"${CACHE_LOCK:-"$HOME/.zsh-custom-data/cache.lock"}"
+      # Parent directory match
+      if [[ "$current_path" == "$cached_path"/* ]]; then
+        printf '%s' "$value"
+        return 0
+      fi
+    fi
+  done < "$cache_file"
 
-  return $?
+  return 1
 }
 
 get_cached() {
   local key="$1"
-  (
-    flock -s 200 || return 1
-    [[ -f "$CACHE_FILE" ]] || return 1
-    grep -m1 -F -- "$key=" "$CACHE_FILE" 2>/dev/null | cut -d= -f2-
-  ) 200<"$CACHE_LOCK"
+  [[ -f "$CACHE_FILE" ]] || return 1
+  grep -m1 -F -- "$key=" "$CACHE_FILE" 2>/dev/null | cut -d= -f2-
 }
 
 set_cached() {
   local key="$1" value="$2"
-  (
-    flock -x 200 || return 1
-    init_cache  # Ensure file exists within lock
 
-    # Using temp file for atomic write
-    tempfile=$(mktemp)
-    awk -v key="$key" -v value="$value" '
-      BEGIN { FS=OFS="="; found=0 }
-      $1 == key { print key "=" value; found=1; next }
-      { print }
-      END { if (!found) print key "=" value }
-    ' "$CACHE_FILE" > "$tempfile" && \
-    mv "$tempfile" "$CACHE_FILE"
-  ) 200>"$CACHE_LOCK"
+  acquire_lock || return 1
+  init_cache  # Ensure file exists
+
+  # Using temp file for atomic write
+  local tempfile
+  tempfile=$(mktemp)
+  awk -v key="$key" -v value="$value" '
+    BEGIN { FS=OFS="="; found=0 }
+    $1 == key { print key "=" value; found=1; next }
+    { print }
+    END { if (!found) print key "=" value }
+  ' "$CACHE_FILE" > "$tempfile" && \
+  mv "$tempfile" "$CACHE_FILE"
+
+  release_lock
 }
 
 reset_version_cache() {
-  (
-    flock -x 200 || return 1
-    [[ -f "$CACHE_FILE" ]] && > "$CACHE_FILE"
-  ) 200>"$CACHE_LOCK"
+  acquire_lock || return 1
+  [[ -f "$CACHE_FILE" ]] && > "$CACHE_FILE"
+  release_lock
 }
 
 # =================== VERSION MANAGEMENT FUNCTIONS ===================
