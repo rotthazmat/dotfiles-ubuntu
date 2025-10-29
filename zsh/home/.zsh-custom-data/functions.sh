@@ -144,6 +144,18 @@ battery_value() {
   echo "${percentage:-N/A}"
 }
 
+date_value() {
+  date +"%d/%m/%Y"
+}
+
+time_value() {
+  date +"%H:%M:%S"
+}
+
+datetime_value() {
+  date +"%d/%m/%Y %H:%M:%S"
+}
+
 node_version() {
   get_tech_version "node" || {
     [[ -f "$PWD/package.json" ]] || return
@@ -194,6 +206,9 @@ git_version() {
 user_name_ps1()     { local v; v=$(user_name_value)     && print_version "$v" "👤" 250; }
 computer_name_ps1() { local v; v=$(computer_name_value) && print_version "$v" "💻" 180; }
 battery_ps1()       { local v; v=$(battery_value)       && print_version "$v" "⚡" 226; }
+date_ps1()          { local v; v=$(date_value)          && print_version "$v" "📅" 117; }
+time_ps1()          { local v; v=$(time_value)          && print_version "$v" "🕐" 153; }
+datetime_ps1()      { local v; v=$(datetime_value)      && print_version "$v" "📅" 111; }
 node_ps1()          { local v; v=$(node_version)        && print_version "$v" "⬢" 120; }
 php_ps1()           { local v; v=$(php_version)         && print_version "$v" "🐘" 183; }
 python_ps1()        {
