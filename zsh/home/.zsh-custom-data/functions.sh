@@ -129,7 +129,18 @@ computer_name_value() {
 }
 
 battery_value() {
-  local percentage=$(upower -i /org/freedesktop/UPower/devices/battery_BAT1 2>/dev/null | grep percentage | awk '{print $2}')
+  local percentage
+
+  # macOS
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    percentage=$(pmset -g batt 2>/dev/null | grep -Eo "\d+%" | head -1)
+  # Linux
+  else
+    percentage=$(upower -i /org/freedesktop/UPower/devices/battery_BAT1 2>/dev/null | grep percentage | awk '{print $2}')
+  fi
+
+  # Strip the % sign to avoid conflicts with zsh prompt formatting
+  percentage="${percentage%%%}"
   echo "${percentage:-N/A}"
 }
 
