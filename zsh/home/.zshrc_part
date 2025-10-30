@@ -11,10 +11,10 @@ if [[ -f ~/.zsh-custom-data/functions.sh ]]; then
     PROMPT+="$(python_ps1)"
     PROMPT+="$(mc_spigot_ps1)"
     PROMPT+="$(git_ps1)"
-    # PROMPT+="$(battery_ps1)"
     # PROMPT+="$(date_ps1)"
     # PROMPT+="$(time_ps1)"
     # PROMPT+="$(datetime_ps1)"
+    # PROMPT+="$(battery_ps1)"
     # PROMPT+="$(network_ps1)"
     PROMPT+=$'\n%F{221}$%f '
   }

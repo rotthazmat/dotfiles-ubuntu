@@ -133,10 +133,10 @@ if [[ -f ~/.bash-custom-data/functions.sh ]]; then
     PS1+="$(python_ps1)"
     PS1+="$(mc_spigot_ps1)"
     PS1+="$(git_ps1)"
-    # PS1+="$(battery_ps1)"
     # PS1+="$(date_ps1)"
     # PS1+="$(time_ps1)"
     # PS1+="$(datetime_ps1)"
+    # PS1+="$(battery_ps1)"
     # PS1+="$(network_ps1)"
     PS1+='\n\[\e[38;5;221m\]\$\[\e[0m\] '
   }
