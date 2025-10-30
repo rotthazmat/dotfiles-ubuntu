@@ -118,6 +118,11 @@ datetime_value() {
   date +"%d/%m/%Y %H:%M:%S"
 }
 
+network_value() {
+  local network=$(nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2)
+  [[ -n "$network" ]] && echo "$network"
+}
+
 node_version() {
   get_tech_version "node" || {
     [[ -f "$PWD/package.json" ]] || return
@@ -171,6 +176,7 @@ battery_ps1()       { local v; v=$(battery_value)       && print_version "$v" "�
 date_ps1()          { local v; v=$(date_value)          && print_version "$v" "📅" 117; }
 time_ps1()          { local v; v=$(time_value)          && print_version "$v" "🕐" 153; }
 datetime_ps1()      { local v; v=$(datetime_value)      && print_version "$v" "📅" 111; }
+network_ps1()       { local v; v=$(network_value)       && print_version "$v" "📶" 81; }
 node_ps1()          { local v; v=$(node_version)        && print_version "$v" "⬢" 120; }
 php_ps1()           { local v; v=$(php_version)         && print_version "$v" "🐘" 183; }
 python_ps1()        {
